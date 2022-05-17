@@ -102,6 +102,11 @@ namespace WebCompiler
             {
                 string postCssArguments = "--use autoprefixer";
 
+                if (!options.SourceMap)
+                {
+                    postCssArguments += " --no-map";
+                }
+
                 start.Arguments = start.Arguments.TrimEnd('"') + $" | \"{Path.Combine(_path, "node_modules\\.bin\\postcss.cmd")}\" {postCssArguments}\"";
                 start.EnvironmentVariables.Add("BROWSERSLIST", options.AutoPrefix);
             }
