@@ -12,9 +12,12 @@ These are the changes to each version that has been released
 on the official Visual Studio extension gallery.These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
 
-**2022-03-02**
+**2022-05-23**
 
-## 1.14.6
+## 1.14.8
+- [x] Added SourceMap setting to AutoPrefix postcss arguments
+
+## 1.14.7
 - [x] Support old default value for style
 - [x] Fix Compile On Build
 
