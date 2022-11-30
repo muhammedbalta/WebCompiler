@@ -14,6 +14,9 @@ on the official Visual Studio extension gallery.
 
 **2022-05-23**
 
+## 1.14.9
+- [x] .js files now compile on save
+
 ## 1.14.8
 - [x] Added SourceMap setting to AutoPrefix postcss arguments
 

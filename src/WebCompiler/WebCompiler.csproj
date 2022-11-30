@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\common.props" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,7 +14,8 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Authors>Jason Moore</Authors>
     <RepositoryUrl>https://github.com/failwyn/WebCompiler</RepositoryUrl>
-    <Version>1.14.8</Version>
+    <Version>1.14.9</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Node\prepare.cmd" />
@@ -24,10 +25,10 @@
     <EmbeddedResource Include="Node\7z.exe" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.1.0-*" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.0-*" PrivateAssets="All" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" PrivateAssets="All" />
-    <PackageReference Include="NUglify" Version="1.5.12" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.4.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.4.0" PrivateAssets="All" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" PrivateAssets="All" />
+    <PackageReference Include="NUglify" Version="1.20.3" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MSBuild\*.targets" PackagePath="build\" />
