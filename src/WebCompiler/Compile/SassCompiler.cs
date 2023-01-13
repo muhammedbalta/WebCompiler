@@ -24,58 +24,64 @@ namespace WebCompiler
         {
             string baseFolder = Path.GetDirectoryName(config.FileName);
             string inputFile = Path.Combine(baseFolder, config.InputFile);
-
-            FileInfo info = new FileInfo(inputFile);
-            string content = File.ReadAllText(info.FullName);
-
-            CompilerResult result = new CompilerResult
+            DirectoryInfo dinfo = new DirectoryInfo(inputFile);
+            FileInfo[] scssFiles = dinfo.GetFiles("*.scss", SearchOption.AllDirectories);
+            foreach (FileInfo scssFile in scssFiles)
             {
-                FileName = info.FullName,
-                OriginalContent = content,
-            };
+                
+                string content = File.ReadAllText(scssFile.FullName);
 
-            try
-            {
-                RunCompilerProcess(config, info);
-
-                int sourceMapIndex = _output.LastIndexOf("*/");
-                if (sourceMapIndex > -1 && _output.Contains("sourceMappingURL=data:"))
+                CompilerResult result = new CompilerResult
                 {
-                    _output = _output.Substring(0, sourceMapIndex + 2);
-                }
-
-                result.CompiledContent = _output;
-
-                if (_error.Length > 0)
-                {
-                    JObject json = JObject.Parse(_error);
-
-                    CompilerError ce = new CompilerError
-                    {
-                        FileName = info.FullName,
-                        Message = json["message"].ToString(),
-                        ColumnNumber = int.Parse(json["column"].ToString()),
-                        LineNumber = int.Parse(json["line"].ToString()),
-                        IsWarning = !string.IsNullOrEmpty(_output)
-                    };
-
-                    result.Errors.Add(ce);
-                }
-            }
-            catch (Exception ex)
-            {
-                CompilerError error = new CompilerError
-                {
-                    FileName = info.FullName,
-                    Message = string.IsNullOrEmpty(_error) ? ex.Message : _error,
-                    LineNumber = 0,
-                    ColumnNumber = 0,
+                    FileName = scssFile.FullName,
+                    OriginalContent = content,
                 };
 
-                result.Errors.Add(error);
+                try
+                {
+                    RunCompilerProcess(config, scssFile);
+
+                    int sourceMapIndex = _output.LastIndexOf("*/");
+                    if (sourceMapIndex > -1 && _output.Contains("sourceMappingURL=data:"))
+                    {
+                        _output = _output.Substring(0, sourceMapIndex + 2);
+                    }
+
+                    result.CompiledContent = _output;
+
+                    if (_error.Length > 0)
+                    {
+                        JObject json = JObject.Parse(_error);
+
+                        CompilerError ce = new CompilerError
+                        {
+                            FileName = scssFile.FullName,
+                            Message = json["message"].ToString(),
+                            ColumnNumber = int.Parse(json["column"].ToString()),
+                            LineNumber = int.Parse(json["line"].ToString()),
+                            IsWarning = !string.IsNullOrEmpty(_output)
+                        };
+
+                        result.Errors.Add(ce);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    CompilerError error = new CompilerError
+                    {
+                        FileName = scssFile.FullName,
+                        Message = string.IsNullOrEmpty(_error) ? ex.Message : _error,
+                        LineNumber = 0,
+                        ColumnNumber = 0,
+                    };
+
+                    result.Errors.Add(error);
+                }
+                return result;
             }
 
-            return result;
+            return null;
+
         }
 
         private void RunCompilerProcess(Config config, FileInfo info)

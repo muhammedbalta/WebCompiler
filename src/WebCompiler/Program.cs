@@ -9,8 +9,8 @@ namespace WebCompiler
     {
         static int Main(params string[] args)
         {
-            string configPath = args[0];
-            string file = args.Length > 1 ? args[1] : null;
+            string configPath = "D:\\Sistem Plus Ticari\\portal\\compilerconfig.json";
+            string file = "*.scss";
             var configs = GetConfigs(configPath, file);
 
             if (configs == null)
@@ -57,12 +57,9 @@ namespace WebCompiler
             if (configs == null || !configs.Any())
                 return null;
 
-            if (file != null)
+            if (file != null && !file.StartsWith("*"))
             {
-                if (file.StartsWith("*"))
-                    configs = configs.Where(c => Path.GetExtension(c.InputFile).Equals(file.Substring(1), StringComparison.OrdinalIgnoreCase));
-                else
-                    configs = configs.Where(c => c.InputFile.Equals(file, StringComparison.OrdinalIgnoreCase));
+                configs = configs.Where(c => c.InputFile.Equals(file, StringComparison.OrdinalIgnoreCase));
             }
 
             return configs;

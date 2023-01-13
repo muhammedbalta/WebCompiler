@@ -61,10 +61,12 @@ namespace WebCompiler
         /// </summary>
         public void DeleteOutputFiles(string configFile)
         {
-            var configs = ConfigHandler.GetConfigs(configFile);
-            foreach (var item in configs)
+            var config = ConfigHandler.GetConfigs(configFile).FirstOrDefault();
+            DirectoryInfo dinfo = new DirectoryInfo(config.InputFile);
+            FileInfo[] cssFiles = dinfo.GetFiles("*.css");
+            foreach(FileInfo cssFile in cssFiles)
             {
-                var outputFile = item.GetAbsoluteOutputFile().FullName;
+                var outputFile = cssFile.FullName;
                 var minFile = Path.ChangeExtension(outputFile, ".min" + Path.GetExtension(outputFile));
                 var mapFile = minFile + ".map";
                 var gzipFile = minFile + ".gz";
@@ -74,6 +76,7 @@ namespace WebCompiler
                 DeleteFile(mapFile);
                 DeleteFile(gzipFile);
             }
+
         }
 
         static void DeleteFile(string fileName)
@@ -106,13 +109,15 @@ namespace WebCompiler
             lock (_syncRoot)
             {
                 string folder = Path.GetDirectoryName(configFile);
+                DirectoryInfo dinfo = new DirectoryInfo(folder);
+                FileInfo[] inputFiles = dinfo.GetFiles("*.scss", SearchOption.AllDirectories);
                 List<CompilerResult> list = new List<CompilerResult>();
-                var configs = ConfigHandler.GetConfigs(configFile);
+                var config = ConfigHandler.GetConfigs(configFile).FirstOrDefault();
 
                 // Compile if the file if it's referenced directly in compilerconfig.json
-                foreach (Config config in configs)
+                foreach (FileInfo inputFile in inputFiles)
                 {
-                    string input = Path.Combine(folder, config.InputFile.Replace("/", "\\"));
+                    string input = Path.Combine(folder, inputFile.FullName.Replace("/", "\\"));
 
                     if (input.Equals(sourceFile, StringComparison.OrdinalIgnoreCase))
                     {
@@ -144,9 +149,9 @@ namespace WebCompiler
                     {
                         string sourceExtension = Path.GetExtension(sourceFile);
 
-                        foreach (Config config in configs)
+                        foreach (FileInfo inputFile in inputFiles)
                         {
-                            string inputExtension = Path.GetExtension(config.InputFile);
+                            string inputExtension = Path.GetExtension(inputFile.FullName);
 
                             if (inputExtension.Equals(sourceExtension, StringComparison.OrdinalIgnoreCase))
                                 list.Add(ProcessConfig(folder, config));
@@ -194,49 +199,55 @@ namespace WebCompiler
             if (result.Errors.Any(e => !e.IsWarning))
                 return result;
 
-            if (Path.GetExtension(config.OutputFile).Equals(".css", StringComparison.OrdinalIgnoreCase) && AdjustRelativePaths(config))
+            if (AdjustRelativePaths(config))
             {
                 result.CompiledContent = CssRelativePath.Adjust(result.CompiledContent, config);
             }
 
             config.Output = result.CompiledContent;
-
-            FileInfo outputFile = config.GetAbsoluteOutputFile();
-            bool containsChanges = FileHelpers.HasFileContentChanged(outputFile.FullName, config.Output);
-
-            OnBeforeProcess(config, baseFolder, containsChanges);
-
-            if (containsChanges)
+            string folder = config.GetAbsoluteInputFile().FullName;
+            DirectoryInfo dinfo = new DirectoryInfo(folder);
+            FileInfo[] inputFiles = dinfo.GetFiles("*.scss", SearchOption.AllDirectories);
+            foreach(FileInfo inputFile in inputFiles)
             {
-                string dir = outputFile.DirectoryName;
+                bool containsChanges = FileHelpers.HasFileContentChanged(inputFile.FullName, config.Output);
+                string newFilePath = inputFile.DirectoryName + "\\" + Path.GetFileNameWithoutExtension(inputFile.FullName) + ".css";
 
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                OnBeforeProcess(config, baseFolder, containsChanges);
 
-                File.WriteAllText(outputFile.FullName, config.Output, new UTF8Encoding(true));
-            }
-
-            OnAfterProcess(config, baseFolder, containsChanges);
-
-            //if (!config.Minify.ContainsKey("enabled") || config.Minify["enabled"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase))
-            //{
-            FileMinifier.MinifyFile(config);
-            //}
-
-            if (!string.IsNullOrEmpty(result.SourceMap))
-            {
-                string absolute = config.GetAbsoluteOutputFile().FullName;
-                string mapFile = absolute + ".map";
-                bool smChanges = FileHelpers.HasFileContentChanged(mapFile, result.SourceMap);
-
-                OnBeforeWritingSourceMap(absolute, mapFile, smChanges);
-
-                if (smChanges)
+                if (containsChanges)
                 {
-                    File.WriteAllText(mapFile, result.SourceMap, new UTF8Encoding(true));
+                    string dir = inputFile.DirectoryName;
+
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
+
+                    File.WriteAllText(newFilePath, config.Output, new UTF8Encoding(true));
                 }
 
-                OnAfterWritingSourceMap(absolute, mapFile, smChanges);
+                OnAfterProcess(config, baseFolder, containsChanges);
+
+                //if (!config.Minify.ContainsKey("enabled") || config.Minify["enabled"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase))
+                //{
+                FileMinifier.MinifyFile(config, newFilePath);
+                //}
+
+                if (!string.IsNullOrEmpty(result.SourceMap))
+                {
+                    string absolute = config.GetAbsoluteOutputFile().FullName;
+                    string mapFile = absolute + ".map";
+                    bool smChanges = FileHelpers.HasFileContentChanged(mapFile, result.SourceMap);
+
+                    OnBeforeWritingSourceMap(absolute, mapFile, smChanges);
+
+                    if (smChanges)
+                    {
+                        File.WriteAllText(mapFile, result.SourceMap, new UTF8Encoding(true));
+                    }
+
+                    OnAfterWritingSourceMap(absolute, mapFile, smChanges);
+                }
+
             }
 
             return result;

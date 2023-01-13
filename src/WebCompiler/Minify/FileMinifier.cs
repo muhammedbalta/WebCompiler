@@ -12,9 +12,9 @@ namespace WebCompiler
     /// </summary>
     public class FileMinifier
     {
-        internal static MinificationResult MinifyFile(Config config)
+        internal static MinificationResult MinifyFile(Config config,  string path)
         {
-            FileInfo file = config.GetAbsoluteOutputFile();
+            FileInfo file = new FileInfo(path);
             string extension = file.Extension.ToUpperInvariant();
 
             switch (extension)

@@ -67,6 +67,9 @@ namespace WebCompiler
                 case ".ES6":
                     compiler = new BabelCompiler(_path);
                     break;
+                default:
+                    compiler = config.UseNodeSass ? new NodeSassCompiler(_path) : new SassCompiler(_path);
+                    break;
             }
 
             return compiler;

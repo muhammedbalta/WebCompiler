@@ -76,8 +76,17 @@ namespace WebCompiler
         /// </summary>
         public FileInfo GetAbsoluteOutputFile()
         {
-            string folder = new FileInfo(FileName).DirectoryName;
-            return new FileInfo(Path.Combine(folder, OutputFile.Replace("/", "\\")));
+            if(string.IsNullOrEmpty(OutputFile))
+            {
+                string folder = new FileInfo(FileName).DirectoryName;
+                return new FileInfo(Path.Combine(folder, InputFile.Replace("/", "\\")));
+            }
+            else
+            {
+                string folder = new FileInfo(FileName).DirectoryName;
+                return new FileInfo(Path.Combine(folder, OutputFile.Replace("/", "\\")));
+            }
+
         }
 
         /// <summary>
